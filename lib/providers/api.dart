@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:http/http.dart' as http;
+import 'package:inventory/providers/search.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -12,10 +13,17 @@ part 'api.g.dart';
 class Api {
   static const url = 'api.guildwars2.com';
 
-  static Uri get characters => Uri.https(url, '/v2/characters');
-  static Uri inventory(String character) =>
-      Uri.https(url, '${characters.path}/$character/inventory');
+  static Uri characters(String key) =>
+      Uri.https(url, '/v2/characters', {'access_token': key});
+
+  static Uri inventory(String character, String key) {
+    final base = characters(key);
+    return Uri.https(
+        url, '${base.path}/$character/inventory', base.queryParameters);
+  }
+
   static Uri item(int id) => Uri.https(url, '/v2/items/$id');
+
   static Uri items(List<int> ids) =>
       Uri.https(url, '/v2/items', {'ids': ids.join(',')});
 }
@@ -42,10 +50,7 @@ class Key extends _$Key {
 Future<List<String>> characters(CharactersRef ref) async {
   final key = ref.watch(keyProvider);
   final response = await http.get(
-    Api.characters,
-    headers: {
-      HttpHeaders.authorizationHeader: 'Bearer ${key.value}',
-    },
+    Api.characters(key.value ?? ''),
   );
 
   if (response.statusCode == HttpStatus.unauthorized) {
@@ -111,39 +116,26 @@ class Items extends _$Items {
     final key = ref.watch(keyProvider);
 
     final response = await http.get(
-      Api.inventory(character),
-      headers: {
-        HttpHeaders.authorizationHeader: 'Bearer ${key.value}',
-      },
+      Api.inventory(character, key.value ?? ''),
     );
 
-    final inventory = Inventory.fromJson(jsonDecode(response.body));
-    return inventory.bags.expand((e) => e.items).toList();
+    return Inventory.fromJson(jsonDecode(response.body))
+        .bags
+        .expand((e) => e.items)
+        .toList();
   }
 }
 
-// @riverpod
-// Stream<Map<String, List<Item>>> items(ItemsRef ref) async* {
-//   final token = ref.watch(keyProvider);
-//   final characters = ref.watch(charactersProvider);
-//   final items = <String, List<Item>>{};
+@riverpod
+class FilteredItems extends _$FilteredItems {
+  @override
+  List<Item> build({required String character}) {
+    final items = ref.watch(itemsProvider(character: character)).value ?? [];
+    final filter = ref.watch(filteredIdsProvider);
 
-//   for (final character in characters.value ?? []) {
-//     final response = await http.get(
-//       Api.inventory(character),
-//       headers: {
-//         HttpHeaders.authorizationHeader: 'Bearer ${token.value}',
-//       },
-//     );
-
-//     if (response.statusCode == HttpStatus.ok) {
-//       final inventory = Inventory.fromJson(jsonDecode(response.body));
-//       items[character] = inventory.bags.expand((e) => e.items).toList();
-
-//       yield items;
-//     }
-//   }
-// }
+    return items.where((e) => filter.contains(e.id)).toList();
+  }
+}
 
 @riverpod
 Set<int> itemIds(ItemIdsRef ref) {
@@ -156,56 +148,25 @@ Set<int> itemIds(ItemIdsRef ref) {
       {};
 }
 
-// @riverpod
-// Future<Map<int, ItemDetails>> itemDetails(ItemDetailsRef ref) async {
-//   final client = http.Client();
-//   ref.onDispose(() => client.close());
-
-//   final ids = ref.watch(itemIdsProvider);
-
-//   final response = await client.get(Api.items(ids.toList()));
-
-//   final data = jsonDecode(response.body) as List<dynamic>;
-
-//   return Map.fromEntries(
-//     data.map((e) => ItemDetails.fromJson(e)).map((e) => MapEntry(e.id, e)),
-//   );
-// }
-
 @riverpod
 class ItemDetails extends _$ItemDetails {
   @override
-  Map<int, Details> build() {
-    ref.listen(
-      itemIdsProvider,
-      (previous, next) => insert(next),
-    );
+  Future<Map<int, Details>> build() async {
+    final ids = ref.watch(itemIdsProvider);
 
-    // final newIds = ids.difference(state.keys.toSet());
-    // // final ids = ref.watch(itemIdsProvider);
+    final newIds = ids.difference(state.value?.keys.toSet() ?? {});
+    final current = state.value ?? {};
 
-    // final response = await http.get(Api.items(ids.toList()));
+    if (newIds.isNotEmpty) {
+      final response = await http.get(Api.items(newIds.toList()));
 
-    // final data = jsonDecode(response.body) as List<dynamic>;
+      final data = jsonDecode(response.body) as List<dynamic>;
 
-    // state.addAll(Map.fromEntries(
-    //   data.map((e) => Details.fromJson(e)).map((e) => MapEntry(e.id, e)),
-    // ));
-    return {};
-  }
-
-  Future<void> insert(Set<int> ids) async {
-    final newIds = ids.difference(state.keys.toSet());
-    final response = await http.get(Api.items(newIds.toList()));
-
-    if (response.statusCode != HttpStatus.ok) {
-      return;
+      current.addAll(Map.fromEntries(
+        data.map((e) => Details.fromJson(e)).map((e) => MapEntry(e.id, e)),
+      ));
     }
 
-    final data = jsonDecode(response.body) as List<dynamic>;
-
-    state.addAll(Map.fromEntries(
-      data.map((e) => Details.fromJson(e)).map((e) => MapEntry(e.id, e)),
-    ));
+    return current;
   }
 }

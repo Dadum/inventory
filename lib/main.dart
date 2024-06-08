@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:inventory/constants.dart';
 import 'package:inventory/providers/api.dart';
+import 'package:inventory/providers/search.dart';
 
 void main() {
   runApp(
@@ -22,7 +23,7 @@ class App extends ConsumerWidget {
       title: 'Flutter Demo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.orange,
+          seedColor: Colors.blue,
           brightness: Brightness.dark,
         ),
         useMaterial3: true,
@@ -42,15 +43,25 @@ class Home extends ConsumerWidget {
 
     return Scaffold(
         appBar: AppBar(
+          title: const Row(
+            children: [
+              Text('Inventory'),
+              Spacer(),
+              Expanded(child: SearchBar())
+            ],
+          ),
           actions: [
             IconButton(
               icon: const Icon(Icons.refresh),
               onPressed: () {
-                ref.refresh(charactersProvider);
+                for (final character in characters.value ?? []) {
+                  ref.invalidate(itemsProvider(character: character));
+                }
+                ref.invalidate(charactersProvider);
               },
             ),
             IconButton(
-              icon: const Icon(Icons.edit),
+              icon: const Icon(Icons.key),
               onPressed: () {
                 showDialog(
                   context: context,
@@ -66,12 +77,45 @@ class Home extends ConsumerWidget {
           AsyncData(:final value) => ListView.builder(
               itemCount: value.length,
               itemBuilder: (context, index) {
-                return CharacterInventory(character: value[index]);
+                return Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: LayoutConstants.largePadding,
+                    vertical: LayoutConstants.mediumPadding,
+                  ),
+                  child: CharacterInventory(character: value[index]),
+                );
               },
             ),
           AsyncError(:final error) => Center(child: Text(error.toString())),
           _ => const Center(child: CircularProgressIndicator()),
         });
+  }
+}
+
+class SearchBar extends HookConsumerWidget {
+  const SearchBar({super.key});
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final controller = useTextEditingController(
+      text: ref.read(searchProvider),
+    );
+
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        hintText: 'Search',
+        border: const OutlineInputBorder(),
+        prefixIcon: const Icon(Icons.search),
+        suffixIcon: IconButton(
+          icon: const Icon(Icons.clear),
+          onPressed: () {
+            controller.clear();
+            ref.read(searchProvider.notifier).clear();
+          },
+        ),
+      ),
+      onChanged: (value) => ref.read(searchProvider.notifier).search(value),
+    );
   }
 }
 
@@ -118,24 +162,40 @@ class CharacterInventory extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final items = ref.watch(itemsProvider(character: character)).value ?? [];
-    return Column(
-      children: [
-        Text(character),
-        Wrap(
-          children: items
-              .map(
-                (e) => Padding(
-                  padding: const EdgeInsets.all(LayoutConstants.smallPadding),
-                  child: SizedBox.square(
-                    dimension: 80,
-                    child: ItemWidget(item: e),
+    final items = ref.watch(filteredItemsProvider(character: character));
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(LayoutConstants.largePadding),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(LayoutConstants.mediumPadding),
+                  child: Text(
+                    character,
+                    style: Theme.of(context).textTheme.headlineMedium,
                   ),
                 ),
-              )
-              .toList(),
+              ],
+            ),
+            Wrap(
+              children: items
+                  .map(
+                    (e) => Padding(
+                      padding:
+                          const EdgeInsets.all(LayoutConstants.smallPadding),
+                      child: SizedBox.square(
+                        dimension: 80,
+                        child: ItemWidget(item: e),
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
@@ -147,7 +207,7 @@ class ItemWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final details = ref.watch(itemDetailsProvider)[item.id];
+    final details = ref.watch(itemDetailsProvider).value?[item.id];
 
     if (details == null) {
       return const Center(child: CircularProgressIndicator());
@@ -156,20 +216,26 @@ class ItemWidget extends ConsumerWidget {
     return Stack(
       children: [
         Positioned.fill(
-          child: Image.network(
-            details.icon,
-            fit: BoxFit.contain,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8.0),
+            child: Image.network(
+              details.icon,
+              fit: BoxFit.cover,
+            ),
           ),
         ),
         Align(
           alignment: Alignment.bottomRight,
           child: SizedBox.square(
-            dimension: 32,
+            dimension: 34,
             child: Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.0),
+              ),
               child: Center(
                 child: Text(
                   '${item.count}',
-                  style: Theme.of(context).textTheme.titleMedium,
+                  style: Theme.of(context).textTheme.labelSmall,
                 ),
               ),
             ),
