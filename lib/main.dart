@@ -61,7 +61,8 @@ class Home extends ConsumerWidget {
               },
             ),
             IconButton(
-              icon: const Icon(Icons.key),
+              icon: const Icon(Icons.code),
+              tooltip: 'Modify API Key',
               onPressed: () {
                 showDialog(
                   context: context,
@@ -86,7 +87,30 @@ class Home extends ConsumerWidget {
                 );
               },
             ),
-          AsyncError(:final error) => Center(child: Text(error.toString())),
+          AsyncError(:final error) => Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    'There was an error loading the data',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  Text('$error'),
+                  TextButton(
+                    onPressed: () => showDialog(
+                      context: context,
+                      builder: (context) => const KeyDialog(),
+                    ),
+                    child: const Text('Set API Key'),
+                  ),
+                  Text(
+                    'An apy key with at least "account", "characters", and "inventories" permissions is required.',
+                    style: Theme.of(context).textTheme.labelMedium,
+                  ),
+                ],
+              ),
+            ),
           _ => const Center(child: CircularProgressIndicator()),
         });
   }
