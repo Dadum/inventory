@@ -23,6 +23,7 @@ class App extends ConsumerWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
+      debugShowCheckedModeBanner: false,
       home: const Home(),
     );
   }
@@ -36,15 +37,54 @@ class Home extends ConsumerWidget {
     final characters = ref.watch(charactersProvider);
 
     return Scaffold(
-        body: switch (characters) {
-      AsyncData(value: final characters) => ListView.builder(
-          itemCount: characters.length,
-          itemBuilder: (context, index) {
-            return CharacterInventory(character: characters[index]);
-          },
+        appBar: AppBar(
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: () {
+                ref.refresh(charactersProvider);
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: const Text('API Key'),
+                      content: TextField(
+                        controller: TextEditingController(
+                          text: ref.read(tokenProvider).value ?? '',
+                        ),
+                        decoration: const InputDecoration(
+                          hintText: 'API Key',
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text('Close'),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
+          ],
         ),
-      _ => const Center(child: CircularProgressIndicator()),
-    });
+        body: switch (characters) {
+          AsyncData(value: final characters) => ListView.builder(
+              itemCount: characters.length,
+              itemBuilder: (context, index) {
+                return CharacterInventory(character: characters[index]);
+              },
+            ),
+          _ => const Center(child: CircularProgressIndicator()),
+        });
   }
 }
 
