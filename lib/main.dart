@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:inventory/constants.dart';
 import 'package:inventory/providers/api.dart';
@@ -20,7 +21,10 @@ class App extends ConsumerWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.orange,
+          brightness: Brightness.dark,
+        ),
         useMaterial3: true,
       ),
       debugShowCheckedModeBanner: false,
@@ -51,25 +55,7 @@ class Home extends ConsumerWidget {
                 showDialog(
                   context: context,
                   builder: (context) {
-                    return AlertDialog(
-                      title: const Text('API Key'),
-                      content: TextField(
-                        controller: TextEditingController(
-                          text: ref.read(tokenProvider).value ?? '',
-                        ),
-                        decoration: const InputDecoration(
-                          hintText: 'API Key',
-                        ),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                          child: const Text('Close'),
-                        ),
-                      ],
-                    );
+                    return const KeyDialog();
                   },
                 );
               },
@@ -77,14 +63,48 @@ class Home extends ConsumerWidget {
           ],
         ),
         body: switch (characters) {
-          AsyncData(value: final characters) => ListView.builder(
-              itemCount: characters.length,
+          AsyncData(:final value) => ListView.builder(
+              itemCount: value.length,
               itemBuilder: (context, index) {
-                return CharacterInventory(character: characters[index]);
+                return CharacterInventory(character: value[index]);
               },
             ),
+          AsyncError(:final error) => Center(child: Text(error.toString())),
           _ => const Center(child: CircularProgressIndicator()),
         });
+  }
+}
+
+class KeyDialog extends HookConsumerWidget {
+  const KeyDialog({super.key});
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final controller =
+        useTextEditingController(text: ref.watch(keyProvider).value);
+    return AlertDialog(
+      title: const Text('API Key'),
+      content: TextField(
+        controller: controller,
+        decoration: const InputDecoration(
+          hintText: 'API Key',
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            ref.read(keyProvider.notifier).set(key: controller.text);
+            Navigator.pop(context);
+          },
+          child: const Text('Save'),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: const Text('Cancel'),
+        ),
+      ],
+    );
   }
 }
 
@@ -98,7 +118,7 @@ class CharacterInventory extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final items = ref.watch(itemsProvider).value?[character] ?? [];
+    final items = ref.watch(itemsProvider(character: character)).value ?? [];
     return Column(
       children: [
         Text(character),
@@ -127,7 +147,7 @@ class ItemWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final details = ref.watch(itemDetailsProvider).value?[item.id];
+    final details = ref.watch(itemDetailsProvider)[item.id];
 
     if (details == null) {
       return const Center(child: CircularProgressIndicator());

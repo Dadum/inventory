@@ -21,32 +21,35 @@ class Api {
 }
 
 @riverpod
-class Token extends _$Token {
+class Key extends _$Key {
+  static const _settingsKey = 'api-key';
+
   @override
   Future<String> build() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('token') ?? '';
+    return prefs.getString(_settingsKey) ?? '';
   }
 
-  Future<void> set({required String token}) async {
+  Future<void> set({required String key}) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('token', token);
-    state = AsyncValue.data(token);
+    await prefs.setString(_settingsKey, key);
+    state = AsyncValue.data(key);
+    ref.invalidateSelf();
   }
 }
 
 @riverpod
 Future<List<String>> characters(CharactersRef ref) async {
-  final token = ref.watch(tokenProvider);
+  final key = ref.watch(keyProvider);
   final response = await http.get(
     Api.characters,
     headers: {
-      HttpHeaders.authorizationHeader: 'Bearer ${token.value}',
+      HttpHeaders.authorizationHeader: 'Bearer ${key.value}',
     },
   );
 
-  if (response.statusCode != HttpStatus.ok) {
-    return [];
+  if (response.statusCode == HttpStatus.unauthorized) {
+    throw const HttpException('Invalid API key');
   }
 
   return (jsonDecode(response.body) as List<dynamic>)
@@ -59,22 +62,22 @@ class Item with _$Item {
   const factory Item({
     required int id,
     required int count,
-    ItemDetails? details,
+    Details? details,
   }) = _Item;
 
   factory Item.fromJson(Map<String, dynamic> json) => _$ItemFromJson(json);
 }
 
 @freezed
-class ItemDetails with _$ItemDetails {
-  const factory ItemDetails({
+class Details with _$Details {
+  const factory Details({
     required int id,
     required String name,
     required String icon,
-  }) = _ItemDetails;
+  }) = _Details;
 
-  factory ItemDetails.fromJson(Map<String, dynamic> json) =>
-      _$ItemDetailsFromJson(json);
+  factory Details.fromJson(Map<String, dynamic> json) =>
+      _$DetailsFromJson(json);
 }
 
 @freezed
@@ -102,42 +105,107 @@ class Inventory with _$Inventory {
 }
 
 @riverpod
-Stream<Map<String, List<Item>>> items(ItemsRef ref) async* {
-  final token = ref.watch(tokenProvider);
-  final characters = ref.watch(charactersProvider);
-  final items = <String, List<Item>>{};
+class Items extends _$Items {
+  @override
+  Future<List<Item>> build({required String character}) async {
+    final key = ref.watch(keyProvider);
 
-  for (final character in characters.value ?? []) {
     final response = await http.get(
       Api.inventory(character),
       headers: {
-        HttpHeaders.authorizationHeader: 'Bearer ${token.value}',
+        HttpHeaders.authorizationHeader: 'Bearer ${key.value}',
       },
     );
 
-    if (response.statusCode == HttpStatus.ok) {
-      final inventory = Inventory.fromJson(jsonDecode(response.body));
-      items[character] = inventory.bags.expand((e) => e.items).toList();
-
-      yield items;
-    }
+    final inventory = Inventory.fromJson(jsonDecode(response.body));
+    return inventory.bags.expand((e) => e.items).toList();
   }
 }
 
+// @riverpod
+// Stream<Map<String, List<Item>>> items(ItemsRef ref) async* {
+//   final token = ref.watch(keyProvider);
+//   final characters = ref.watch(charactersProvider);
+//   final items = <String, List<Item>>{};
+
+//   for (final character in characters.value ?? []) {
+//     final response = await http.get(
+//       Api.inventory(character),
+//       headers: {
+//         HttpHeaders.authorizationHeader: 'Bearer ${token.value}',
+//       },
+//     );
+
+//     if (response.statusCode == HttpStatus.ok) {
+//       final inventory = Inventory.fromJson(jsonDecode(response.body));
+//       items[character] = inventory.bags.expand((e) => e.items).toList();
+
+//       yield items;
+//     }
+//   }
+// }
+
 @riverpod
-Stream<Map<int, ItemDetails>> itemDetails(ItemDetailsRef ref) async* {
-  final items = ref.watch(itemsProvider);
-  final details = <int, ItemDetails>{};
+Set<int> itemIds(ItemIdsRef ref) {
+  final characters = ref.watch(charactersProvider);
+  return characters.value
+          ?.map((e) => ref.watch(itemsProvider(character: e)))
+          .expand((e) => e.value ?? <Item>[])
+          .map((e) => e.id)
+          .toSet() ??
+      {};
+}
 
-  final ids =
-      items.value?.values.expand((e) => e).map((e) => e.id).toSet() ?? {};
+// @riverpod
+// Future<Map<int, ItemDetails>> itemDetails(ItemDetailsRef ref) async {
+//   final client = http.Client();
+//   ref.onDispose(() => client.close());
 
-  final response = await http.get(Api.items(ids.toList()));
-  if (response.statusCode == HttpStatus.ok) {
+//   final ids = ref.watch(itemIdsProvider);
+
+//   final response = await client.get(Api.items(ids.toList()));
+
+//   final data = jsonDecode(response.body) as List<dynamic>;
+
+//   return Map.fromEntries(
+//     data.map((e) => ItemDetails.fromJson(e)).map((e) => MapEntry(e.id, e)),
+//   );
+// }
+
+@riverpod
+class ItemDetails extends _$ItemDetails {
+  @override
+  Map<int, Details> build() {
+    ref.listen(
+      itemIdsProvider,
+      (previous, next) => insert(next),
+    );
+
+    // final newIds = ids.difference(state.keys.toSet());
+    // // final ids = ref.watch(itemIdsProvider);
+
+    // final response = await http.get(Api.items(ids.toList()));
+
+    // final data = jsonDecode(response.body) as List<dynamic>;
+
+    // state.addAll(Map.fromEntries(
+    //   data.map((e) => Details.fromJson(e)).map((e) => MapEntry(e.id, e)),
+    // ));
+    return {};
+  }
+
+  Future<void> insert(Set<int> ids) async {
+    final newIds = ids.difference(state.keys.toSet());
+    final response = await http.get(Api.items(newIds.toList()));
+
+    if (response.statusCode != HttpStatus.ok) {
+      return;
+    }
+
     final data = jsonDecode(response.body) as List<dynamic>;
-    final items =
-        data.map((e) => ItemDetails.fromJson(e)).map((e) => MapEntry(e.id, e));
 
-    yield Map.fromEntries(items);
+    state.addAll(Map.fromEntries(
+      data.map((e) => Details.fromJson(e)).map((e) => MapEntry(e.id, e)),
+    ));
   }
 }
