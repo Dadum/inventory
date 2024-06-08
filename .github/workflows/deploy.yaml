@@ -21,6 +21,9 @@ jobs:
           flutter-version: ${{ steps.fvm-config-action.outputs.FLUTTER_VERSION }}
           channel: ${{ steps.fvm-config-action.outputs.FLUTTER_CHANNEL }}
 
+      - name: Run Code Generation 🧬
+        run: dart run build_runner build --delete-conflicting-outputs
+
       - name: Build Web 🌐
         run: flutter build web --base-href /${{ github.event.repository.name }}/ --release
 
