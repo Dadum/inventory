@@ -42,77 +42,80 @@ class Home extends ConsumerWidget {
     final characters = ref.watch(charactersProvider);
 
     return Scaffold(
-        appBar: AppBar(
-          title: const Row(
-            children: [
-              Text('Inventory'),
-              Spacer(),
-              Expanded(child: SearchBar())
-            ],
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: () {
-                for (final character in characters.value ?? []) {
-                  ref.invalidate(itemsProvider(character: character));
-                }
-                ref.invalidate(charactersProvider);
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.code),
-              tooltip: 'Modify API Key',
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) {
-                    return const KeyDialog();
-                  },
-                );
-              },
+      appBar: AppBar(
+        title: const Row(
+          children: [
+            Text('Inventory'),
+            Spacer(),
+            Expanded(
+              child: SearchBar(),
             ),
           ],
         ),
-        body: switch (characters) {
-          AsyncData(:final value) => ListView.builder(
-              itemCount: value.length,
-              itemBuilder: (context, index) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: LayoutConstants.largePadding,
-                    vertical: LayoutConstants.mediumPadding,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              for (final character in characters.value ?? []) {
+                ref.invalidate(itemsProvider(character: character));
+              }
+              ref.invalidate(charactersProvider);
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.code),
+            tooltip: 'Modify API Key',
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) {
+                  return const KeyDialog();
+                },
+              );
+            },
+          ),
+        ],
+      ),
+      body: switch (characters) {
+        AsyncData(:final value) => ListView.builder(
+            itemCount: value.length,
+            itemBuilder: (context, index) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: LayoutConstants.largePadding,
+                  vertical: LayoutConstants.mediumPadding,
+                ),
+                child: CharacterInventory(character: value[index]),
+              );
+            },
+          ),
+        AsyncError(:final error) => Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  'There was an error loading the data',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                Text('$error'),
+                TextButton(
+                  onPressed: () => showDialog(
+                    context: context,
+                    builder: (context) => const KeyDialog(),
                   ),
-                  child: CharacterInventory(character: value[index]),
-                );
-              },
+                  child: const Text('Set API Key'),
+                ),
+                Text(
+                  'An apy key with at least "account", "characters", and "inventories" permissions is required.',
+                  style: Theme.of(context).textTheme.labelMedium,
+                ),
+              ],
             ),
-          AsyncError(:final error) => Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    'There was an error loading the data',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  Text('$error'),
-                  TextButton(
-                    onPressed: () => showDialog(
-                      context: context,
-                      builder: (context) => const KeyDialog(),
-                    ),
-                    child: const Text('Set API Key'),
-                  ),
-                  Text(
-                    'An apy key with at least "account", "characters", and "inventories" permissions is required.',
-                    style: Theme.of(context).textTheme.labelMedium,
-                  ),
-                ],
-              ),
-            ),
-          _ => const Center(child: CircularProgressIndicator()),
-        });
+          ),
+        _ => const Center(child: CircularProgressIndicator()),
+      },
+    );
   }
 }
 
@@ -187,6 +190,7 @@ class CharacterInventory extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final items = ref.watch(filteredItemsProvider(character: character));
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(LayoutConstants.largePadding),
