@@ -11,32 +11,20 @@ class SearchBox extends HookConsumerWidget {
       text: ref.read(searchProvider),
     );
 
-    return TextField(
+    return SearchBar(
       controller: controller,
-      decoration: InputDecoration(
-        hintText: 'Search',
-        border: const OutlineInputBorder(),
-        prefixIcon: const Icon(Icons.search),
-        suffixIcon: IconButton(
-          icon: const Icon(Icons.clear),
+      hintText: 'Search',
+      leading: const Icon(Icons.search),
+      trailing: [
+        IconButton(
           onPressed: () {
             controller.clear();
             ref.read(searchProvider.notifier).clear();
           },
+          icon: const Icon(Icons.clear),
         ),
-      ),
+      ],
       onChanged: (value) => ref.read(searchProvider.notifier).search(value),
     );
   }
 }
-
-// SearchBar(
-//               hintText: 'Search',
-//               leading: const Icon(Icons.search),
-//               trailing: [
-//                 IconButton(
-//                   onPressed: () => ref.read(searchProvider.notifier).clear(),
-//                   icon: const Icon(Icons.clear),
-//                 ),
-//               ],
-//             ),

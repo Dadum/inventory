@@ -12,17 +12,31 @@ class CharactersView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final characters = ref.watch(charactersProvider);
     return switch (characters) {
-      AsyncData(:final value) => ListView.builder(
+      AsyncData(:final value) => ListView.separated(
           itemCount: value.length,
           itemBuilder: (context, index) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: LayoutConstants.largePadding,
-                vertical: LayoutConstants.mediumPadding,
-              ),
-              child: CharacterInventory(character: value[index]),
+            return Column(
+              children: [
+                if (index == 0)
+                  Padding(
+                    padding:
+                        const EdgeInsets.all(LayoutConstants.mediumPadding),
+                    child: SizedBox.square(
+                      dimension: Scaffold.of(context).appBarMaxHeight,
+                    ),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: LayoutConstants.largePadding,
+                  ),
+                  child: CharacterInventory(character: value[index]),
+                ),
+              ],
             );
           },
+          separatorBuilder: (context, index) => const SizedBox.square(
+            dimension: LayoutConstants.largePadding,
+          ),
         ),
       AsyncError(:final error) => Center(
           child: Column(

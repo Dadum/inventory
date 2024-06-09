@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:inventory/constants.dart';
 import 'package:inventory/providers/api.dart';
 import 'package:inventory/widgets/characters_view.dart';
 import 'package:inventory/widgets/key_dialog.dart';
@@ -41,15 +42,7 @@ class Home extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
-        title: const Row(
-          children: [
-            Text('Inventory'),
-            Spacer(),
-            Expanded(
-              child: SearchBox(),
-            ),
-          ],
-        ),
+        title: const Text('Inventory'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -72,7 +65,20 @@ class Home extends ConsumerWidget {
           ),
         ],
       ),
-      body: const CharactersView(),
+      body: const Stack(
+        children: [
+          Expanded(
+            child: CharactersView(),
+          ),
+          Align(
+            alignment: Alignment.topCenter,
+            child: Padding(
+              padding: EdgeInsets.all(LayoutConstants.mediumPadding),
+              child: SearchBox(),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
