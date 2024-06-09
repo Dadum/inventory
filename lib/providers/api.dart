@@ -163,6 +163,17 @@ class FilteredItems extends _$FilteredItems {
 }
 
 @riverpod
+List<String> filteredCharacters(FilteredCharactersRef ref) {
+  final characters = ref.watch(charactersProvider);
+
+  return characters.value
+          ?.where(
+              (e) => ref.watch(filteredItemsProvider(character: e)).isNotEmpty)
+          .toList() ??
+      [];
+}
+
+@riverpod
 Set<int> itemIds(ItemIdsRef ref) {
   final characters = ref.watch(charactersProvider);
   return characters.value

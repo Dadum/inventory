@@ -65,12 +65,20 @@ class Home extends ConsumerWidget {
           ),
         ],
       ),
-      body: const Stack(
+      body: Stack(
         children: [
           Expanded(
-            child: CharactersView(),
+            child: Consumer(
+                builder: (context, ref, child) =>
+                    switch (ref.watch(charactersProvider)) {
+                      AsyncData() => const CharactersView(),
+                      AsyncError(:final error) => ApiErrorView(
+                          error: error,
+                        ),
+                      _ => const Center(child: CircularProgressIndicator()),
+                    }),
           ),
-          Align(
+          const Align(
             alignment: Alignment.topCenter,
             child: Padding(
               padding: EdgeInsets.all(LayoutConstants.mediumPadding),
