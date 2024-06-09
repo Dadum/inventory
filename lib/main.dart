@@ -3,8 +3,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:inventory/constants.dart';
 import 'package:inventory/providers/api.dart';
 import 'package:inventory/widgets/characters_view.dart';
-import 'package:inventory/widgets/key_dialog.dart';
 import 'package:inventory/widgets/search_box.dart';
+import 'package:inventory/widgets/settings_drawer.dart';
 
 void main() {
   runApp(
@@ -52,31 +52,28 @@ class Home extends ConsumerWidget {
               ref.invalidate(charactersProvider);
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.code),
-            tooltip: 'Modify API Key',
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) {
-                  return const KeyDialog();
-                },
-              );
+          Builder(
+            builder: (context) {
+              return IconButton(
+                  icon: const Icon(Icons.settings),
+                  tooltip: 'Open settings',
+                  onPressed: () => Scaffold.of(context).openEndDrawer());
             },
           ),
         ],
       ),
+      endDrawer: const SettingsDrawer(),
       body: Stack(
         children: [
           Consumer(
-                builder: (context, ref, child) =>
-                    switch (ref.watch(charactersProvider)) {
-                      AsyncData() => const CharactersView(),
-                      AsyncError(:final error) => ApiErrorView(
-                          error: error,
-                        ),
-                      _ => const Center(child: CircularProgressIndicator()),
-                    }),
+              builder: (context, ref, child) =>
+                  switch (ref.watch(charactersProvider)) {
+                    AsyncData() => const CharactersView(),
+                    AsyncError(:final error) => ApiErrorView(
+                        error: error,
+                      ),
+                    _ => const Center(child: CircularProgressIndicator()),
+                  }),
           const Align(
             alignment: Alignment.topCenter,
             child: Padding(

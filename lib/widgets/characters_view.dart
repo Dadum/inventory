@@ -3,7 +3,6 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:inventory/constants.dart';
 import 'package:inventory/providers/api.dart';
 import 'package:inventory/widgets/character_inventory.dart';
-import 'package:inventory/widgets/key_dialog.dart';
 
 class CharactersView extends ConsumerWidget {
   const CharactersView({super.key});
@@ -62,10 +61,7 @@ class ApiErrorView extends ConsumerWidget {
           ),
           Text('$error'),
           TextButton(
-            onPressed: () => showDialog(
-              context: context,
-              builder: (context) => const KeyDialog(),
-            ),
+            onPressed: () => Scaffold.of(context).openEndDrawer(),
             child: const Text('Set API Key'),
           ),
           Text(
