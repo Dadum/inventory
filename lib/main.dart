@@ -27,6 +27,7 @@ class App extends ConsumerWidget {
           seedColor: Colors.blue,
           brightness: Brightness.dark,
         ),
+        typography: Typography.material2021(),
         useMaterial3: true,
       ),
       debugShowCheckedModeBanner: false,
