@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:inventory/constants.dart';
 import 'package:inventory/providers/api.dart';
-import 'package:inventory/providers/search.dart';
+import 'package:inventory/widgets/characters_view.dart';
+import 'package:inventory/widgets/key_dialog.dart';
+import 'package:inventory/widgets/search_box.dart';
 
 void main() {
   runApp(
@@ -40,8 +39,6 @@ class Home extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final characters = ref.watch(charactersProvider);
-
     return Scaffold(
       appBar: AppBar(
         title: const Row(
@@ -49,7 +46,7 @@ class Home extends ConsumerWidget {
             Text('Inventory'),
             Spacer(),
             Expanded(
-              child: SearchBar(),
+              child: SearchBox(),
             ),
           ],
         ),
@@ -57,9 +54,7 @@ class Home extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
-              for (final character in characters.value ?? []) {
-                ref.invalidate(itemsProvider(character: character));
-              }
+              ref.invalidate(itemsProvider);
               ref.invalidate(charactersProvider);
             },
           ),
@@ -77,230 +72,7 @@ class Home extends ConsumerWidget {
           ),
         ],
       ),
-      body: switch (characters) {
-        AsyncData(:final value) => ListView.builder(
-            itemCount: value.length,
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: LayoutConstants.largePadding,
-                  vertical: LayoutConstants.mediumPadding,
-                ),
-                child: CharacterInventory(character: value[index]),
-              );
-            },
-          ),
-        AsyncError(:final error) => Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  'There was an error loading the data',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                Text('$error'),
-                TextButton(
-                  onPressed: () => showDialog(
-                    context: context,
-                    builder: (context) => const KeyDialog(),
-                  ),
-                  child: const Text('Set API Key'),
-                ),
-                Text(
-                  'An apy key with at least "account", "characters", and "inventories" permissions is required.',
-                  style: Theme.of(context).textTheme.labelMedium,
-                ),
-              ],
-            ),
-          ),
-        _ => const Center(child: CircularProgressIndicator()),
-      },
-    );
-  }
-}
-
-class SearchBar extends HookConsumerWidget {
-  const SearchBar({super.key});
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final controller = useTextEditingController(
-      text: ref.read(searchProvider),
-    );
-
-    return TextField(
-      controller: controller,
-      decoration: InputDecoration(
-        hintText: 'Search',
-        border: const OutlineInputBorder(),
-        prefixIcon: const Icon(Icons.search),
-        suffixIcon: IconButton(
-          icon: const Icon(Icons.clear),
-          onPressed: () {
-            controller.clear();
-            ref.read(searchProvider.notifier).clear();
-          },
-        ),
-      ),
-      onChanged: (value) => ref.read(searchProvider.notifier).search(value),
-    );
-  }
-}
-
-class KeyDialog extends HookConsumerWidget {
-  const KeyDialog({super.key});
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final controller =
-        useTextEditingController(text: ref.watch(keyProvider).value);
-    return AlertDialog(
-      title: const Text('API Key'),
-      content: TextField(
-        controller: controller,
-        decoration: const InputDecoration(
-          hintText: 'API Key',
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            ref.read(keyProvider.notifier).set(key: controller.text);
-            Navigator.pop(context);
-          },
-          child: const Text('Save'),
-        ),
-        TextButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          child: const Text('Cancel'),
-        ),
-      ],
-    );
-  }
-}
-
-class CharacterInventory extends ConsumerWidget {
-  const CharacterInventory({
-    super.key,
-    required this.character,
-  });
-
-  final String character;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final items = ref.watch(filteredItemsProvider(character: character));
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(LayoutConstants.largePadding),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(LayoutConstants.mediumPadding),
-                  child: Text(
-                    character,
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
-                ),
-              ],
-            ),
-            Wrap(
-              children: items
-                  .map(
-                    (e) => Padding(
-                      padding:
-                          const EdgeInsets.all(LayoutConstants.smallPadding),
-                      child: SizedBox.square(
-                        dimension: 80,
-                        child: ItemWidget(item: e),
-                      ),
-                    ).animate().fade(),
-                  )
-                  .toList(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class ItemWidget extends ConsumerWidget {
-  final Item item;
-
-  const ItemWidget({super.key, required this.item});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final details = ref.watch(itemDetailsProvider).value?[item.id];
-
-    if (details == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    return Tooltip(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(8.0),
-      ),
-      richMessage: WidgetSpan(
-        child: Column(
-          children: [
-            Text(
-              details.name,
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.apply(color: details.rarity.color),
-            ),
-          ],
-        ),
-      ),
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8.0),
-              child: Image.network(
-                details.icon,
-                fit: BoxFit.cover,
-                loadingBuilder: (context, child, loadingProgress) =>
-                    loadingProgress == null
-                        ? child
-                        : Center(
-                            child: CircularProgressIndicator(
-                              value: loadingProgress.expectedTotalBytes != null
-                                  ? loadingProgress.cumulativeBytesLoaded /
-                                      loadingProgress.expectedTotalBytes!
-                                  : null,
-                            ),
-                          ),
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment.bottomRight,
-            child: SizedBox.square(
-              dimension: 34,
-              child: Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                child: Center(
-                  child: Text(
-                    '${item.count}',
-                    style: Theme.of(context).textTheme.labelSmall,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+      body: const CharactersView(),
     );
   }
 }
