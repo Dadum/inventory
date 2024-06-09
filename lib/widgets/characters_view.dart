@@ -27,7 +27,8 @@ class CharactersView extends ConsumerWidget {
                   ),
                 ConstrainedBox(
                   constraints: const BoxConstraints(
-                      maxWidth: LayoutConstants.contentMaxWidth),
+                    maxWidth: LayoutConstants.contentMaxWidth,
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: LayoutConstants.largePadding,
