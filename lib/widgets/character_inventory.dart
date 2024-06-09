@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:inventory/constants.dart';
 import 'package:inventory/providers/api.dart';
@@ -43,7 +42,7 @@ class CharacterInventory extends ConsumerWidget {
                         dimension: 80,
                         child: ItemWidget(item: e),
                       ),
-                    ).animate().fade(),
+                    ),
                   )
                   .toList(),
             ),
