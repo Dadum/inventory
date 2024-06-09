@@ -80,15 +80,15 @@ enum Rarity {
   @JsonValue('Basic')
   basic(Color(0xFFFFFFFF)),
   @JsonValue('Fine')
-  fine(Color(0xFF1A9306)),
+  fine(Color(0xFF0075FF)),
   @JsonValue('Masterwork')
-  masterwork(Color(0xFF0075FF)),
+  masterwork(Color(0xFF1A9306)),
   @JsonValue('Rare')
-  rare(Color(0xFF703CE6)),
+  rare(Color(0xFFFFBC05)),
   @JsonValue('Exotic')
-  exotic(Color(0xFFFFA405)),
+  exotic(Color(0xFFDD5D00)),
   @JsonValue('Ascended')
-  ascended(Color(0xFFDD5D00)),
+  ascended(Color(0xFFDF35EE)),
   @JsonValue('Legendary')
   legendary(Color(0xFF4C139D));
 
