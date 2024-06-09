@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:http/http.dart' as http;
@@ -73,12 +74,36 @@ class Item with _$Item {
   factory Item.fromJson(Map<String, dynamic> json) => _$ItemFromJson(json);
 }
 
+enum Rarity {
+  @JsonValue('Junk')
+  junk(Color(0xFFA8A8A8)),
+  @JsonValue('Basic')
+  basic(Color(0xFFFFFFFF)),
+  @JsonValue('Fine')
+  fine(Color(0xFF1A9306)),
+  @JsonValue('Masterwork')
+  masterwork(Color(0xFF0075FF)),
+  @JsonValue('Rare')
+  rare(Color(0xFF703CE6)),
+  @JsonValue('Exotic')
+  exotic(Color(0xFFFFA405)),
+  @JsonValue('Ascended')
+  ascended(Color(0xFFDD5D00)),
+  @JsonValue('Legendary')
+  legendary(Color(0xFF4C139D));
+
+  const Rarity(this.color);
+
+  final Color color;
+}
+
 @freezed
 class Details with _$Details {
   const factory Details({
     required int id,
     required String name,
     required String icon,
+    required Rarity rarity,
   }) = _Details;
 
   factory Details.fromJson(Map<String, dynamic> json) =>
