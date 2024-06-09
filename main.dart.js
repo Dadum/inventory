@@ -75271,7 +75271,7 @@ s.toString
 return s},
 $S:94}
 A.EJ.prototype={
-k0(a,b){return new A.xg(B.BS,"Flutter Demo",A.zM(null,A.aAQ(B.a2,B.dV),!0),!1,null)}}
+k0(a,b){return new A.xg(B.BS,"Inventory",A.zM(null,A.aAQ(B.a2,B.dV),!0),!1,null)}}
 A.H9.prototype={
 k0(a,b){var s,r,q=null,p={},o=b.fX($.amh(),t.yC),n=t.F,m=A.b([A.Hg(q,B.C2,new A.a0v(o,b),q,q),A.Hg(q,B.C3,new A.a0w(a),q,"Modify API Key")],n)
 $label0$0:{p.a=null
