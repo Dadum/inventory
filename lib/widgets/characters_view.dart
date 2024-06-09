@@ -25,11 +25,15 @@ class CharactersView extends ConsumerWidget {
                       dimension: Scaffold.of(context).appBarMaxHeight,
                     ),
                   ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: LayoutConstants.largePadding,
+                ConstrainedBox(
+                  constraints: const BoxConstraints(
+                      maxWidth: LayoutConstants.contentMaxWidth),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: LayoutConstants.largePadding,
+                    ),
+                    child: CharacterInventory(character: value[index]),
                   ),
-                  child: CharacterInventory(character: value[index]),
                 ),
               ],
             );
