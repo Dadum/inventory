@@ -68,8 +68,7 @@ class Home extends ConsumerWidget {
       ),
       body: Stack(
         children: [
-          Expanded(
-            child: Consumer(
+          Consumer(
                 builder: (context, ref, child) =>
                     switch (ref.watch(charactersProvider)) {
                       AsyncData() => const CharactersView(),
@@ -78,7 +77,6 @@ class Home extends ConsumerWidget {
                         ),
                       _ => const Center(child: CircularProgressIndicator()),
                     }),
-          ),
           const Align(
             alignment: Alignment.topCenter,
             child: Padding(
