@@ -98,19 +98,6 @@ enum Rarity {
 }
 
 @freezed
-class Details with _$Details {
-  const factory Details({
-    required int id,
-    required String name,
-    required String icon,
-    required Rarity rarity,
-  }) = _Details;
-
-  factory Details.fromJson(Map<String, dynamic> json) =>
-      _$DetailsFromJson(json);
-}
-
-@freezed
 class Bag with _$Bag {
   const Bag._();
 
@@ -182,6 +169,41 @@ Set<int> itemIds(ItemIdsRef ref) {
           .map((e) => e.id)
           .toSet() ??
       {};
+}
+
+@freezed
+class Details with _$Details {
+  const factory Details({
+    required int id,
+    required String chatLink,
+    required String name,
+    required String icon,
+    String? description,
+    required String type,
+    required Rarity rarity,
+    required int level,
+    required int vendorValue,
+    required List<String> flags,
+    required List<String> restrictions,
+    DetailsDetails? details,
+  }) = _Details;
+
+  factory Details.fromJson(Map<String, dynamic> json) =>
+      _$DetailsFromJson(json);
+}
+
+@freezed
+class DetailsDetails with _$DetailsDetails {
+  const factory DetailsDetails({
+    String? type,
+    String? description,
+    int? minPower,
+    int? maxPower,
+    int? defense,
+  }) = _DetailsDetails;
+
+  factory DetailsDetails.fromJson(Map<String, dynamic> json) =>
+      _$DetailsDetailsFromJson(json);
 }
 
 @riverpod
