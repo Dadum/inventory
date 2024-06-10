@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:inventory/constants.dart';
 import 'package:inventory/providers/api.dart';
@@ -7,6 +9,9 @@ import 'package:inventory/widgets/search_box.dart';
 import 'package:inventory/widgets/settings_drawer.dart';
 
 void main() {
+  if (kDebugMode) {
+    Animate.restartOnHotReload = true;
+  }
   runApp(
     const ProviderScope(
       child: App(),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:inventory/providers/api.dart';
 
@@ -43,7 +44,7 @@ class ItemWidget extends ConsumerWidget {
                 fit: BoxFit.cover,
                 loadingBuilder: (context, child, loadingProgress) =>
                     loadingProgress == null
-                        ? child
+                        ? child.animate().fadeIn(duration: 500.ms)
                         : Center(
                             child: CircularProgressIndicator(
                               value: loadingProgress.expectedTotalBytes != null
@@ -74,6 +75,6 @@ class ItemWidget extends ConsumerWidget {
           ),
         ],
       ),
-    );
+    ).animate().fadeIn(duration: 500.ms);
   }
 }

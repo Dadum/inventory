@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:inventory/constants.dart';
 import 'package:inventory/providers/api.dart';
@@ -32,7 +33,7 @@ class CharactersView extends ConsumerWidget {
                 ),
                 child: CharacterInventory(character: characters[index]),
               ),
-            ),
+            ).animate().fadeIn(duration: 500.ms),
           ],
         );
       },
