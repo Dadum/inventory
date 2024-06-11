@@ -55,7 +55,7 @@ class Key extends _$Key {
 }
 
 @riverpod
-Future<List<String>> characters(CharactersRef ref) async {
+Future<List<String>> accountCharacters(AccountCharactersRef ref) async {
   final key = ref.watch(keyProvider);
   final response = await http.get(
     Api.characters(key.value ?? ''),
@@ -65,8 +65,15 @@ Future<List<String>> characters(CharactersRef ref) async {
     throw const HttpException('Invalid API key');
   }
 
+  return (jsonDecode(response.body) as List<dynamic>)
+      .map((e) => e as String)
+      .toList();
+}
+
+@riverpod
+Future<List<String>> characters(CharactersRef ref) async {
   return [
-    ...(jsonDecode(response.body) as List<dynamic>).map((e) => e as String),
+    ...ref.watch(accountCharactersProvider).value ?? [],
     if (ref.watch(settingsProvider).showBank) Api.bank,
     if (ref.watch(settingsProvider).showMaterials) Api.materials,
   ];
