@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:inventory/providers/api.dart';
+import 'package:inventory/providers/settings.dart';
 
 class SettingsDrawer extends HookConsumerWidget {
   const SettingsDrawer({
@@ -29,6 +30,17 @@ class SettingsDrawer extends HookConsumerWidget {
               onChanged: (value) =>
                   ref.read(keyProvider.notifier).set(key: value),
             ),
+          ),
+          CheckboxListTile.adaptive(
+            title: const Text('Show Bank'),
+            value: ref.watch(settingsProvider).showBank,
+            onChanged: (_) => ref.read(settingsProvider.notifier).toggleBank(),
+          ),
+          CheckboxListTile.adaptive(
+            title: const Text('Show Materials'),
+            value: ref.watch(settingsProvider).showMaterials,
+            onChanged: (_) =>
+                ref.read(settingsProvider.notifier).toggleMaterials(),
           ),
         ],
       ),

@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:http/http.dart' as http;
 import 'package:inventory/providers/search.dart';
+import 'package:inventory/providers/settings.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -66,8 +67,8 @@ Future<List<String>> characters(CharactersRef ref) async {
 
   return [
     ...(jsonDecode(response.body) as List<dynamic>).map((e) => e as String),
-    Api.bank,
-    Api.materials,
+    if (ref.watch(settingsProvider).showBank) Api.bank,
+    if (ref.watch(settingsProvider).showMaterials) Api.materials,
   ];
 }
 
