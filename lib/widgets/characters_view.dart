@@ -66,7 +66,7 @@ class ApiErrorView extends ConsumerWidget {
             child: const Text('Set API Key'),
           ),
           Text(
-            'An apy key with at least "account", "characters", and "inventories" permissions is required.',
+            'An api key with at least "account", "characters", and "inventories" permissions is required.',
             style: Theme.of(context).textTheme.labelMedium,
           ),
         ],

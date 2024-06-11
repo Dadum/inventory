@@ -12,6 +12,7 @@ void main() {
   if (kDebugMode) {
     Animate.restartOnHotReload = true;
   }
+
   runApp(
     const ProviderScope(
       child: App(),

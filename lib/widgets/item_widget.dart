@@ -29,7 +29,6 @@ class ItemWidget extends ConsumerWidget {
       ),
       child: InkWell(
         onTap: () async {
-          await Clipboard.setData(ClipboardData(text: details.chatLink));
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Copied to clipboard'),
@@ -37,6 +36,7 @@ class ItemWidget extends ConsumerWidget {
               width: 200,
             ),
           );
+          await Clipboard.setData(ClipboardData(text: details.chatLink));
         },
         child: Stack(
           children: [
@@ -149,6 +149,7 @@ class VendorValue extends StatelessWidget {
           if (value > 10000) ...[
             TextSpan(
               text: '${value ~/ 10000}',
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
             WidgetSpan(
               alignment: PlaceholderAlignment.middle,
@@ -167,6 +168,7 @@ class VendorValue extends StatelessWidget {
           if (value > 100) ...[
             TextSpan(
               text: '${(value % 10000) ~/ 100}',
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
             WidgetSpan(
               alignment: PlaceholderAlignment.middle,
@@ -184,6 +186,7 @@ class VendorValue extends StatelessWidget {
           ],
           TextSpan(
             text: '${value % 100}',
+            style: Theme.of(context).textTheme.bodyMedium,
           ),
           // copper colored circle
           WidgetSpan(
