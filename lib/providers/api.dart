@@ -23,6 +23,11 @@ class Api {
         url, '${base.path}/$character/inventory', base.queryParameters);
   }
 
+  static const String bankName = 'Bank';
+
+  static Uri bank(String key) =>
+      Uri.https(url, '/v2/account/bank', {'access_token': key});
+
   static Uri item(int id) => Uri.https(url, '/v2/items/$id');
 
   static Uri items(List<int> ids) =>
@@ -58,9 +63,10 @@ Future<List<String>> characters(CharactersRef ref) async {
     throw const HttpException('Invalid API key');
   }
 
-  return (jsonDecode(response.body) as List<dynamic>)
-      .map((e) => e as String)
-      .toList();
+  return [
+    Api.bankName,
+    ...(jsonDecode(response.body) as List<dynamic>).map((e) => e as String)
+  ];
 }
 
 @freezed
@@ -126,6 +132,17 @@ class Items extends _$Items {
   @override
   Future<List<Item>> build({required String character}) async {
     final key = ref.watch(keyProvider);
+
+    if (character == Api.bankName) {
+      final response = await http.get(
+        Api.bank(key.value ?? ''),
+      );
+
+      return (jsonDecode(response.body) as List<dynamic>)
+          .where((e) => e != null && e != '')
+          .map((e) => Item.fromJson(e))
+          .toList();
+    }
 
     final response = await http.get(
       Api.inventory(character, key.value ?? ''),
