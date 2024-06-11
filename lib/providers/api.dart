@@ -14,8 +14,10 @@ part 'api.g.dart';
 class Api {
   static const url = 'api.guildwars2.com';
 
-  static Uri characters(String key) =>
-      Uri.https(url, '/v2/characters', {'access_token': key});
+  static Uri autheticated(String endpoint, String key) =>
+      Uri.https(url, '/v2/$endpoint', {'access_token': key});
+
+  static Uri characters(String key) => autheticated('characters', key);
 
   static Uri inventory(String character, String key) {
     final base = characters(key);
@@ -23,10 +25,9 @@ class Api {
         url, '${base.path}/$character/inventory', base.queryParameters);
   }
 
-  static const String bankName = 'Bank';
+  static const String bank = 'bank';
 
-  static Uri bank(String key) =>
-      Uri.https(url, '/v2/account/bank', {'access_token': key});
+  static const String materials = 'materials';
 
   static Uri item(int id) => Uri.https(url, '/v2/items/$id');
 
@@ -64,8 +65,9 @@ Future<List<String>> characters(CharactersRef ref) async {
   }
 
   return [
-    Api.bankName,
-    ...(jsonDecode(response.body) as List<dynamic>).map((e) => e as String)
+    ...(jsonDecode(response.body) as List<dynamic>).map((e) => e as String),
+    Api.bank,
+    Api.materials,
   ];
 }
 
@@ -133,9 +135,9 @@ class Items extends _$Items {
   Future<List<Item>> build({required String character}) async {
     final key = ref.watch(keyProvider);
 
-    if (character == Api.bankName) {
+    if (character == Api.bank || character == Api.materials) {
       final response = await http.get(
-        Api.bank(key.value ?? ''),
+        Api.autheticated('account/$character', key.value ?? ''),
       );
 
       return (jsonDecode(response.body) as List<dynamic>)
