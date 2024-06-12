@@ -1,16 +1,6 @@
-# inventory
+# Inventory
 
-A new Flutter project.
+[![Deploy Page](https://github.com/Dadum/inventory/actions/workflows/deploy.yaml/badge.svg)](https://github.com/Dadum/inventory/actions/workflows/deploy.yaml)
+[![Static Badge](https://img.shields.io/badge/Inventoy-gh_pages-blue)](https://dadum.github.io/inventory)
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+A merged GW2 inventory browser for all characters on your account.
