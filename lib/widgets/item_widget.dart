@@ -41,47 +41,84 @@ class ItemWidget extends ConsumerWidget {
         child: Stack(
           children: [
             Positioned.fill(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8.0),
+              child: Card(
+                clipBehavior: Clip.antiAlias,
                 child: Image.network(
                   details.icon,
                   fit: BoxFit.cover,
-                  loadingBuilder: (context, child, loadingProgress) =>
-                      loadingProgress == null
-                          ? child.animate().fadeIn(duration: 500.ms)
-                          : Center(
-                              child: CircularProgressIndicator(
-                                value: loadingProgress.expectedTotalBytes !=
-                                        null
-                                    ? loadingProgress.cumulativeBytesLoaded /
-                                        loadingProgress.expectedTotalBytes!
-                                    : null,
-                              ),
-                            ),
+                  frameBuilder:
+                      (context, child, frame, wasSynchronouslyLoaded) {
+                    if (frame == null) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    return child.animate().fadeIn(duration: 500.ms);
+                  },
                 ),
               ),
             ),
             Align(
               alignment: Alignment.bottomRight,
-              child: SizedBox.square(
-                dimension: 34,
-                child: Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  child: Center(
-                    child: Text(
-                      '${item.count}',
-                      style: Theme.of(context).textTheme.labelSmall,
-                    ),
-                  ),
-                ),
+              child: Padding(
+                padding: const EdgeInsets.all(LayoutConstants.smallPadding),
+                child: CountCard(count: item.count),
               ),
             ),
           ],
         ),
       ),
     ).animate().fadeIn(duration: 500.ms);
+  }
+}
+
+class EmptySlots extends StatelessWidget {
+  const EmptySlots({
+    super.key,
+    required this.freeSlots,
+  });
+
+  final int freeSlots;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        const Positioned.fill(
+          child: Card.filled(),
+        ),
+        Align(
+          alignment: Alignment.bottomRight,
+          child: Padding(
+            padding: const EdgeInsets.all(LayoutConstants.smallPadding),
+            child: CountCard(count: freeSlots),
+          ),
+        )
+      ],
+    );
+  }
+}
+
+class CountCard extends StatelessWidget {
+  final int count;
+
+  const CountCard({super.key, required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.square(
+      dimension: 34,
+      child: Card(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8.0),
+        ),
+        child: Center(
+          child: Text(
+            '$count',
+            style: Theme.of(context).textTheme.labelSmall,
+          ),
+        ),
+      ),
+    );
   }
 }
 

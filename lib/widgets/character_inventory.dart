@@ -15,6 +15,7 @@ class CharacterInventory extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final items = ref.watch(filteredItemsProvider(character: character));
+    final freeSlots = items.whereType<Null>().length;
 
     return Card(
       child: Padding(
@@ -33,18 +34,19 @@ class CharacterInventory extends ConsumerWidget {
               ],
             ),
             Wrap(
-              children: items
-                  .map(
-                    (e) => Padding(
-                      padding:
-                          const EdgeInsets.all(LayoutConstants.smallPadding),
-                      child: SizedBox.square(
+              children: [
+                ...items.whereType<Item>().map(
+                      (e) => SizedBox.square(
                         dimension: 80,
                         child: ItemWidget(item: e),
                       ),
                     ),
-                  )
-                  .toList(),
+                if (freeSlots > 0)
+                  SizedBox.square(
+                    dimension: 80,
+                    child: EmptySlots(freeSlots: freeSlots),
+                  ),
+              ],
             ),
           ],
         ),

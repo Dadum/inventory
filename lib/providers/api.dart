@@ -124,7 +124,7 @@ class Bag with _$Bag {
 
   factory Bag.fromJson(Map<String, dynamic> json) => _$BagFromJson(json);
 
-  List<Item> get items => inventory.whereType<Item>().toList();
+  List<Item?> get items => inventory;
 }
 
 @freezed
@@ -140,7 +140,7 @@ class Inventory with _$Inventory {
 @riverpod
 class Items extends _$Items {
   @override
-  Future<List<Item>> build({required String character}) async {
+  Future<List<Item?>> build({required String character}) async {
     final key = ref.watch(keyProvider);
 
     if (character == Api.bank || character == Api.materials) {
@@ -149,8 +149,7 @@ class Items extends _$Items {
       );
 
       return (jsonDecode(response.body) as List<dynamic>)
-          .where((e) => e != null && e != '')
-          .map((e) => Item.fromJson(e))
+          .map((e) => e == null ? null : Item.fromJson(e))
           .toList();
     }
 
@@ -168,11 +167,15 @@ class Items extends _$Items {
 @riverpod
 class FilteredItems extends _$FilteredItems {
   @override
-  List<Item> build({required String character}) {
+  List<Item?> build({required String character}) {
     final items = ref.watch(itemsProvider(character: character)).value ?? [];
     final filter = ref.watch(filteredIdsProvider);
 
-    return items.where((e) => filter.contains(e.id)).toList();
+    if (filter.isEmpty) {
+      return items;
+    }
+
+    return items.where((e) => e != null && filter.contains(e.id)).toList();
   }
 }
 
@@ -193,6 +196,7 @@ Set<int> itemIds(ItemIdsRef ref) {
   return characters.value
           ?.map((e) => ref.watch(itemsProvider(character: e)))
           .expand((e) => e.value ?? <Item>[])
+          .whereType<Item>()
           .map((e) => e.id)
           .toSet() ??
       {};
