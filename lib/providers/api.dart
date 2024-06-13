@@ -73,9 +73,11 @@ Future<List<String>> accountCharacters(AccountCharactersRef ref) async {
 @riverpod
 Future<List<String>> characters(CharactersRef ref) async {
   return [
-    ...ref.watch(accountCharactersProvider).value ?? [],
-    if (ref.watch(settingsProvider).showBank) Api.bank,
-    if (ref.watch(settingsProvider).showMaterials) Api.materials,
+    if (ref.watch(settingsProvider.select((e) => e.showCharacters)))
+      ...ref.watch(accountCharactersProvider).value ?? [],
+    if (ref.watch(settingsProvider.select((e) => e.showBank))) Api.bank,
+    if (ref.watch(settingsProvider.select((e) => e.showMaterials)))
+      Api.materials,
   ];
 }
 

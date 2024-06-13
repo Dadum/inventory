@@ -10,6 +10,7 @@ part 'settings.g.dart';
 @freezed
 class SettingsState with _$SettingsState {
   const factory SettingsState({
+    @Default(true) bool showCharacters,
     @Default(true) bool showBank,
     @Default(true) bool showMaterials,
   }) = _SettingsState;
@@ -33,21 +34,26 @@ class Settings extends _$Settings {
       },
     );
 
+    ref.listen(
+      settingsProvider,
+      (previous, next) async {
+        final prefs = await SharedPreferences.getInstance();
+        prefs.setString(_settingsKey, jsonEncode(next.toJson()));
+      },
+    );
+
     return const SettingsState();
   }
 
-  Future<void> _save() async {
-    final prefs = await SharedPreferences.getInstance();
-    prefs.setString(_settingsKey, jsonEncode(state.toJson()));
+  void toggleCharacters() {
+    state = state.copyWith(showCharacters: !state.showCharacters);
   }
 
   void toggleBank() {
     state = state.copyWith(showBank: !state.showBank);
-    _save();
   }
 
   void toggleMaterials() {
     state = state.copyWith(showMaterials: !state.showMaterials);
-    _save();
   }
 }

@@ -32,13 +32,20 @@ class SettingsDrawer extends HookConsumerWidget {
             ),
           ),
           CheckboxListTile.adaptive(
-            title: const Text('Show Bank'),
+            title: const Text('Characters'),
+            value: ref.watch(
+                settingsProvider.select((value) => value.showCharacters)),
+            onChanged: (_) =>
+                ref.read(settingsProvider.notifier).toggleCharacters(),
+          ),
+          CheckboxListTile.adaptive(
+            title: const Text('Bank'),
             value:
                 ref.watch(settingsProvider.select((value) => value.showBank)),
             onChanged: (_) => ref.read(settingsProvider.notifier).toggleBank(),
           ),
           CheckboxListTile.adaptive(
-            title: const Text('Show Materials'),
+            title: const Text('Materials'),
             value: ref
                 .watch(settingsProvider.select((value) => value.showMaterials)),
             onChanged: (_) =>
