@@ -32,7 +32,7 @@ class Api {
 
   static Uri item(int id) => Uri.https(url, '/v2/items/$id');
 
-  static Uri items(List<int> ids) =>
+  static Uri items(Iterable<int> ids) =>
       Uri.https(url, '/v2/items', {'ids': ids.join(',')});
 }
 
@@ -246,14 +246,15 @@ class ItemDetails extends _$ItemDetails {
     final newIds = ids.difference(state.value?.keys.toSet() ?? {});
     final current = state.value ?? {};
 
-    if (newIds.isNotEmpty) {
-      final response = await http.get(Api.items(newIds.toList()));
+    while (newIds.isNotEmpty) {
+      final response = await http.get(Api.items(newIds.take(200)));
 
-      final data = jsonDecode(response.body) as List<dynamic>;
+      final items = (jsonDecode(response.body) as List<dynamic>)
+          .map((e) => Details.fromJson(e as Map<String, dynamic>));
 
-      current.addAll(Map.fromEntries(
-        data.map((e) => Details.fromJson(e)).map((e) => MapEntry(e.id, e)),
-      ));
+      current.addEntries(items.map((e) => MapEntry(e.id, e)));
+
+      newIds.removeAll(current.keys);
     }
 
     return current;
