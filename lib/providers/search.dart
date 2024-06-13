@@ -24,6 +24,10 @@ Set<int> filteredIds(FilteredIdsRef ref) {
   final search = ref.watch(searchProvider);
   final items = ref.watch(itemDetailsProvider);
 
+  if (search.isEmpty) {
+    return {};
+  }
+
   return items.value?.values
           .where(
               (item) => item.name.toLowerCase().contains(search.toLowerCase()))
