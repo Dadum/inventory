@@ -15,6 +15,7 @@ class CharactersView extends ConsumerWidget {
       itemCount: characters.length,
       itemBuilder: (context, index) {
         return Column(
+          key: ValueKey(characters[index]),
           children: [
             if (index == 0)
               Padding(
