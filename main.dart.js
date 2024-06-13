@@ -31655,10 +31655,12 @@ a4U:function a4U(){},
 aay:function aay(){},
 aaF:function aaF(){},
 bgP(){return new A.vC()},
-bqH(a){var s=a.fB($.acs(),t.N),r=a.fB($.aY3(),t.o_).gl()
-if(r==null)r=null
-else{r=r.gaR()
-r=r.jD(r,new A.aRM(s)).iw(0,new A.aRN(),t.S).j6(0)}return r==null?A.aH(t.S):r},
+bqH(a){var s,r=a.fB($.acs(),t.N),q=a.fB($.aY3(),t.o_)
+if(r.length===0)return A.aH(t.S)
+s=q.gl()
+if(s==null)s=null
+else{s=s.gaR()
+s=s.jD(s,new A.aRM(r)).iw(0,new A.aRN(),t.S).j6(0)}return s==null?A.aH(t.S):s},
 vC:function vC(){this.a=$},
 aRM:function aRM(a){this.a=a},
 aRN:function aRN(){},
