@@ -118,7 +118,6 @@ class Bag with _$Bag {
   const Bag._();
 
   const factory Bag({
-    required int id,
     required List<Item?> inventory,
   }) = _Bag;
 
@@ -150,6 +149,7 @@ class Items extends _$Items {
 
       return (jsonDecode(response.body) as List<dynamic>)
           .map((e) => e == null ? null : Item.fromJson(e))
+          .where((e) => e == null || e.count > 0)
           .toList();
     }
 
@@ -160,6 +160,9 @@ class Items extends _$Items {
     return Inventory.fromJson(jsonDecode(response.body))
         .bags
         .expand((e) => e.items)
+        .where(
+          (e) => e == null || e.count > 0,
+        )
         .toList();
   }
 }
@@ -240,7 +243,7 @@ class DetailsDetails with _$DetailsDetails {
 @riverpod
 class ItemDetails extends _$ItemDetails {
   @override
-  Future<Map<int, Details>> build() async {
+  Stream<Map<int, Details>> build() async* {
     final ids = ref.watch(itemIdsProvider);
 
     final newIds = ids.difference(state.value?.keys.toSet() ?? {});
@@ -255,8 +258,8 @@ class ItemDetails extends _$ItemDetails {
       current.addEntries(items.map((e) => MapEntry(e.id, e)));
 
       newIds.removeAll(current.keys);
-    }
 
-    return current;
+      yield current;
+    }
   }
 }

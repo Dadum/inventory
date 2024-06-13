@@ -13,61 +13,68 @@ class ItemWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final details = ref.watch(itemDetailsProvider).value?[item.id];
+    return FutureBuilder(
+        future: ref
+            .watch(itemDetailsProvider.selectAsync((value) => value[item.id])),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData || snapshot.data == null) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-    if (details == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
+          final details = snapshot.data!;
 
-    return Tooltip(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(8.0),
-      ),
-      richMessage: WidgetSpan(
-        child: ItemTooltip(details: details),
-      ),
-      child: InkWell(
-        onTap: () async {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Copied to clipboard'),
-              behavior: SnackBarBehavior.floating,
-              width: 200,
+          return Tooltip(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(8.0),
             ),
-          );
-          await Clipboard.setData(ClipboardData(text: details.chatLink));
-        },
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: Card(
-                clipBehavior: Clip.antiAlias,
-                child: Image.network(
-                  details.icon,
-                  fit: BoxFit.cover,
-                  frameBuilder:
-                      (context, child, frame, wasSynchronouslyLoaded) {
-                    if (frame == null) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
+            richMessage: WidgetSpan(
+              child: ItemTooltip(details: details),
+            ),
+            child: InkWell(
+              onTap: () async {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Copied to clipboard'),
+                    behavior: SnackBarBehavior.floating,
+                    width: 200,
+                  ),
+                );
+                await Clipboard.setData(ClipboardData(text: details.chatLink));
+              },
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: Card(
+                      clipBehavior: Clip.antiAlias,
+                      child: Image.network(
+                        details.icon,
+                        fit: BoxFit.cover,
+                        frameBuilder:
+                            (context, child, frame, wasSynchronouslyLoaded) {
+                          if (frame == null) {
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          }
 
-                    return child.animate().fadeIn(duration: 500.ms);
-                  },
-                ),
+                          return child.animate().fadeIn(duration: 500.ms);
+                        },
+                      ),
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.bottomRight,
+                    child: Padding(
+                      padding:
+                          const EdgeInsets.all(LayoutConstants.smallPadding),
+                      child: CountCard(count: item.count),
+                    ),
+                  ),
+                ],
               ),
             ),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: Padding(
-                padding: const EdgeInsets.all(LayoutConstants.smallPadding),
-                child: CountCard(count: item.count),
-              ),
-            ),
-          ],
-        ),
-      ),
-    ).animate().fadeIn(duration: 500.ms);
+          ).animate().fadeIn(duration: 500.ms);
+        });
   }
 }
 
