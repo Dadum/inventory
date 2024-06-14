@@ -189,20 +189,26 @@ class VendorValue extends StatelessWidget {
     return RichText(
       text: TextSpan(
         children: [
-          const TextSpan(text: 'Vendor value: '),
+          TextSpan(
+            text: 'Vendor value: ',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
           if (value > 10000) ...[
             TextSpan(
               text: '${value ~/ 10000}',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             WidgetSpan(
-              alignment: PlaceholderAlignment.middle,
-              child: SizedBox.square(
-                dimension: Theme.of(context).textTheme.labelSmall?.fontSize,
-                child: Container(
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFFFC813),
-                    shape: BoxShape.circle,
+              alignment: PlaceholderAlignment.bottom,
+              child: Padding(
+                padding: const EdgeInsets.all(LayoutConstants.smallPadding),
+                child: SizedBox.square(
+                  dimension: Theme.of(context).textTheme.bodySmall?.fontSize,
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFFC813),
+                      shape: BoxShape.circle,
+                    ),
                   ),
                 ),
               ),
@@ -215,13 +221,16 @@ class VendorValue extends StatelessWidget {
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             WidgetSpan(
-              alignment: PlaceholderAlignment.middle,
-              child: SizedBox.square(
-                dimension: Theme.of(context).textTheme.labelSmall?.fontSize,
-                child: Container(
-                  decoration: const BoxDecoration(
-                    color: Color(0xffc0c0c0),
-                    shape: BoxShape.circle,
+              alignment: PlaceholderAlignment.bottom,
+              child: Padding(
+                padding: const EdgeInsets.all(LayoutConstants.smallPadding),
+                child: SizedBox.square(
+                  dimension: Theme.of(context).textTheme.bodySmall?.fontSize,
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Color(0xffc0c0c0),
+                      shape: BoxShape.circle,
+                    ),
                   ),
                 ),
               ),
@@ -234,13 +243,16 @@ class VendorValue extends StatelessWidget {
           ),
           // copper colored circle
           WidgetSpan(
-            alignment: PlaceholderAlignment.middle,
-            child: SizedBox.square(
-              dimension: Theme.of(context).textTheme.labelSmall?.fontSize,
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: Color(0xffb87333),
-                  shape: BoxShape.circle,
+            alignment: PlaceholderAlignment.bottom,
+            child: Padding(
+              padding: const EdgeInsets.all(LayoutConstants.smallPadding),
+              child: SizedBox.square(
+                dimension: Theme.of(context).textTheme.bodySmall?.fontSize,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Color(0xffb87333),
+                    shape: BoxShape.circle,
+                  ),
                 ),
               ),
             ),
