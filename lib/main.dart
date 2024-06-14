@@ -49,7 +49,18 @@ class Home extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Inventory'),
+        title: const Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Inventory'),
+            SizedBox.square(
+              dimension: LayoutConstants.mediumPadding,
+            ),
+            Flexible(
+              child: SearchBox(),
+            ),
+          ],
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -69,25 +80,15 @@ class Home extends ConsumerWidget {
         ],
       ),
       endDrawer: const SettingsDrawer(),
-      body: Stack(
-        children: [
-          Consumer(
-              builder: (context, ref, child) =>
-                  switch (ref.watch(charactersProvider)) {
-                    AsyncData() => const CharactersView(),
-                    AsyncError(:final error) => ApiErrorView(
-                        error: error,
-                      ),
-                    _ => const Center(child: CircularProgressIndicator()),
-                  }),
-          const Align(
-            alignment: Alignment.topCenter,
-            child: Padding(
-              padding: EdgeInsets.all(LayoutConstants.mediumPadding),
-              child: SearchBox(),
+      body: Consumer(
+        builder: (context, ref, child) =>
+            switch (ref.watch(charactersProvider)) {
+          AsyncData() => const CharactersView(),
+          AsyncError(:final error) => ApiErrorView(
+              error: error,
             ),
-          ),
-        ],
+          _ => const Center(child: CircularProgressIndicator()),
+        },
       ),
     );
   }
