@@ -18,38 +18,49 @@ class CharacterInventory extends ConsumerWidget {
     final freeSlots = items.whereType<Null>().length;
 
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(LayoutConstants.largePadding),
-        child: Column(
-          children: [
-            Row(
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        children: [
+          if (ref.watch(itemsProvider(character: character)).isLoading)
+            const Align(
+              alignment: Alignment.topCenter,
+              child: LinearProgressIndicator(),
+            ),
+          Padding(
+            padding: const EdgeInsets.all(LayoutConstants.largePadding),
+            child: Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(LayoutConstants.mediumPadding),
-                  child: Text(
-                    character,
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
+                Row(
+                  children: [
+                    Padding(
+                      padding:
+                          const EdgeInsets.all(LayoutConstants.mediumPadding),
+                      child: Text(
+                        character,
+                        style: Theme.of(context).textTheme.headlineMedium,
+                      ),
+                    ),
+                  ],
+                ),
+                Wrap(
+                  children: [
+                    ...items.whereType<Item>().map(
+                          (e) => SizedBox.square(
+                            dimension: 80,
+                            child: ItemWidget(item: e),
+                          ),
+                        ),
+                    if (freeSlots > 0)
+                      SizedBox.square(
+                        dimension: 80,
+                        child: EmptySlots(freeSlots: freeSlots),
+                      ),
+                  ],
                 ),
               ],
             ),
-            Wrap(
-              children: [
-                ...items.whereType<Item>().map(
-                      (e) => SizedBox.square(
-                        dimension: 80,
-                        child: ItemWidget(item: e),
-                      ),
-                    ),
-                if (freeSlots > 0)
-                  SizedBox.square(
-                    dimension: 80,
-                    child: EmptySlots(freeSlots: freeSlots),
-                  ),
-              ],
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
