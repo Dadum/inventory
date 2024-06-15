@@ -17,13 +17,6 @@ class CharactersView extends ConsumerWidget {
         return Column(
           key: ValueKey(characters[index]),
           children: [
-            if (index == 0)
-              Padding(
-                padding: const EdgeInsets.all(LayoutConstants.mediumPadding),
-                child: SizedBox.square(
-                  dimension: Scaffold.of(context).appBarMaxHeight,
-                ),
-              ),
             ConstrainedBox(
               constraints: const BoxConstraints(
                 maxWidth: LayoutConstants.contentMaxWidth,
