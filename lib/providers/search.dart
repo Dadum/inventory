@@ -25,7 +25,7 @@ Set<int> filteredIds(FilteredIdsRef ref) {
   final items = ref.watch(itemDetailsProvider);
 
   if (search.isEmpty) {
-    return {};
+    return items.value?.values.map((item) => item.id).toSet() ?? {};
   }
 
   return items.value?.values

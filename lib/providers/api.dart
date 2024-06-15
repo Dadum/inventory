@@ -176,10 +176,6 @@ class FilteredItems extends _$FilteredItems {
     final items = ref.watch(itemsProvider(character: character)).value ?? [];
     final filter = ref.watch(filteredIdsProvider);
 
-    if (filter.isEmpty) {
-      return items;
-    }
-
     return items.where((e) => e != null && filter.contains(e.id)).toList();
   }
 }
