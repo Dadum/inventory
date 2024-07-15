@@ -34,8 +34,7 @@ class Settings extends _$Settings {
       },
     );
 
-    ref.listen(
-      settingsProvider,
+    ref.listenSelf(
       (previous, next) async {
         final prefs = await SharedPreferences.getInstance();
         prefs.setString(_settingsKey, jsonEncode(next.toJson()));
