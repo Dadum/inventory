@@ -14,8 +14,7 @@ class ItemWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return FutureBuilder(
-        future: ref
-            .watch(itemDetailsProvider.selectAsync((value) => value[item.id])),
+        future: ref.watch(detailsProvider(item.id).future),
         builder: (context, snapshot) {
           if (!snapshot.hasData || snapshot.data == null) {
             return const Center(child: CircularProgressIndicator());

@@ -239,25 +239,23 @@ class DetailsDetails with _$DetailsDetails {
 }
 
 @riverpod
-class ItemDetails extends _$ItemDetails {
-  @override
-  Stream<Map<int, Details>> build() async* {
-    final ids = ref.watch(itemIdsProvider);
+Future<Details> details(DetailsRef ref, int id) async {
+  var didDispose = false;
+  ref.onDispose(() => didDispose = true);
 
-    final newIds = ids.difference(state.value?.keys.toSet() ?? {});
-    final current = state.value ?? {};
+  await Future<void>.delayed(const Duration(milliseconds: 250));
 
-    while (newIds.isNotEmpty) {
-      final response = await http.get(Api.items(newIds.take(200)));
-
-      final items = (jsonDecode(response.body) as List<dynamic>)
-          .map((e) => Details.fromJson(e as Map<String, dynamic>));
-
-      current.addEntries(items.map((e) => MapEntry(e.id, e)));
-
-      newIds.removeAll(current.keys);
-
-      yield current;
-    }
+  if (didDispose) {
+    throw Exception('Cancelled');
   }
+
+  final client = http.Client();
+  ref.onDispose(client.close);
+
+  final response = await client.get(Api.item(id));
+  final json = jsonDecode(response.body) as Map<String, dynamic>;
+
+  ref.keepAlive();
+
+  return Details.fromJson(json);
 }

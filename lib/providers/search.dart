@@ -22,16 +22,18 @@ class Search extends _$Search {
 @riverpod
 Set<int> filteredIds(FilteredIdsRef ref) {
   final search = ref.watch(searchProvider);
-  final items = ref.watch(itemDetailsProvider);
-
+  final ids = ref.watch(itemIdsProvider);
   if (search.isEmpty) {
-    return items.value?.values.map((item) => item.id).toSet() ?? {};
+    return ids;
   }
 
-  return items.value?.values
-          .where(
-              (item) => item.name.toLowerCase().contains(search.toLowerCase()))
-          .map((item) => item.id)
-          .toSet() ??
-      {};
+  final items = ids.map(
+    (e) => ref.watch(detailsProvider(e)).value,
+  );
+
+  return items
+      .whereType<Details>()
+      .where((item) => item.name.toLowerCase().contains(search.toLowerCase()))
+      .map((item) => item.id)
+      .toSet();
 }
