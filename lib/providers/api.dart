@@ -2,10 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:http/http.dart' as http;
-import 'package:inventory/providers/search.dart';
-import 'package:inventory/providers/settings.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -26,9 +25,8 @@ class Api {
         url, '${base.path}/$character/inventory', base.queryParameters);
   }
 
-  static const String bank = 'bank';
-
-  static const String materials = 'materials';
+  static Uri bank(String key) => autheticated('account/bank', key);
+  static Uri materials(String key) => autheticated('account/materials', key);
 
   static Uri item(int id) => Uri.https(url, '/v2/items/$id');
 
@@ -55,7 +53,7 @@ class Key extends _$Key {
 }
 
 @riverpod
-Future<List<String>> accountCharacters(AccountCharactersRef ref) async {
+Future<List<String>> characters(CharactersRef ref) async {
   final key = ref.watch(keyProvider);
   final response = await http.get(
     Api.characters(key.value ?? ''),
@@ -70,23 +68,11 @@ Future<List<String>> accountCharacters(AccountCharactersRef ref) async {
       .toList();
 }
 
-@riverpod
-Future<List<String>> characters(CharactersRef ref) async {
-  return [
-    if (ref.watch(settingsProvider.select((e) => e.showCharacters)))
-      ...ref.watch(accountCharactersProvider).value ?? [],
-    if (ref.watch(settingsProvider.select((e) => e.showBank))) Api.bank,
-    if (ref.watch(settingsProvider.select((e) => e.showMaterials)))
-      Api.materials,
-  ];
-}
-
 @freezed
 class Item with _$Item {
   const factory Item({
     required int id,
     required int count,
-    Details? details,
   }) = _Item;
 
   factory Item.fromJson(Map<String, dynamic> json) => _$ItemFromJson(json);
@@ -129,78 +115,61 @@ class Bag with _$Bag {
 }
 
 @freezed
-class Inventory with _$Inventory {
-  const factory Inventory({
+class InventoryResponse with _$InventoryResponse {
+  const factory InventoryResponse({
     required List<Bag> bags,
-  }) = _Inventory;
+  }) = _InventoryResponse;
 
-  factory Inventory.fromJson(Map<String, dynamic> json) =>
-      _$InventoryFromJson(json);
+  factory InventoryResponse.fromJson(Map<String, dynamic> json) =>
+      _$InventoryResponseFromJson(json);
 }
 
 @riverpod
-class Items extends _$Items {
+class Inventory extends _$Inventory {
   @override
-  Future<List<Item?>> build({required String character}) async {
+  Future<Iterable<Item?>> build({required String character}) async {
     final key = ref.watch(keyProvider);
-
-    if (character == Api.bank || character == Api.materials) {
-      final response = await http.get(
-        Api.autheticated('account/$character', key.value ?? ''),
-      );
-
-      return (jsonDecode(response.body) as List<dynamic>)
-          .map((e) => e == null ? null : Item.fromJson(e))
-          .where((e) => e == null || e.count > 0)
-          .toList();
-    }
 
     final response = await http.get(
       Api.inventory(character, key.value ?? ''),
     );
 
-    return Inventory.fromJson(jsonDecode(response.body))
+    final inventory = InventoryResponse.fromJson(jsonDecode(response.body))
         .bags
         .expand((e) => e.items)
         .where(
           (e) => e == null || e.count > 0,
-        )
-        .toList();
+        );
+
+    ref.keepAlive();
+
+    return inventory;
   }
 }
 
 @riverpod
-class FilteredItems extends _$FilteredItems {
-  @override
-  List<Item?> build({required String character}) {
-    final items = ref.watch(itemsProvider(character: character)).value ?? [];
-    final filter = ref.watch(filteredIdsProvider);
+Future<Iterable<Item?>> bank(BankRef ref) async {
+  final key = ref.watch(keyProvider);
 
-    return items.where((e) => e != null && filter.contains(e.id)).toList();
-  }
+  final response = await http.get(
+    Api.bank(key.value ?? ''),
+  );
+
+  return (jsonDecode(response.body) as List<dynamic>)
+      .map((e) => e == null ? null : Item.fromJson(e as Map<String, dynamic>));
 }
 
 @riverpod
-List<String> filteredCharacters(FilteredCharactersRef ref) {
-  final characters = ref.watch(charactersProvider);
+Future<Iterable<Item?>> materials(MaterialsRef ref) async {
+  final key = ref.watch(keyProvider);
 
-  return characters.value
-          ?.where(
-              (e) => ref.watch(filteredItemsProvider(character: e)).isNotEmpty)
-          .toList() ??
-      [];
-}
+  final response = await http.get(
+    Api.materials(key.value ?? ''),
+  );
 
-@riverpod
-Set<int> itemIds(ItemIdsRef ref) {
-  final characters = ref.watch(charactersProvider);
-  return characters.value
-          ?.map((e) => ref.watch(itemsProvider(character: e)))
-          .expand((e) => e.value ?? <Item>[])
-          .whereType<Item>()
-          .map((e) => e.id)
-          .toSet() ??
-      {};
+  return (jsonDecode(response.body) as List<dynamic>)
+      .map((e) => Item.fromJson(e as Map<String, dynamic>))
+      .where((e) => e.count > 0);
 }
 
 @freezed
@@ -217,7 +186,7 @@ class Details with _$Details {
     required int vendorValue,
     required List<String> flags,
     required List<String> restrictions,
-    DetailsDetails? details,
+    VeryDetails? details,
   }) = _Details;
 
   factory Details.fromJson(Map<String, dynamic> json) =>
@@ -225,8 +194,8 @@ class Details with _$Details {
 }
 
 @freezed
-class DetailsDetails with _$DetailsDetails {
-  const factory DetailsDetails({
+class VeryDetails with _$VeryDetails {
+  const factory VeryDetails({
     String? type,
     String? description,
     int? minPower,
@@ -234,8 +203,8 @@ class DetailsDetails with _$DetailsDetails {
     int? defense,
   }) = _DetailsDetails;
 
-  factory DetailsDetails.fromJson(Map<String, dynamic> json) =>
-      _$DetailsDetailsFromJson(json);
+  factory VeryDetails.fromJson(Map<String, dynamic> json) =>
+      _$VeryDetailsFromJson(json);
 }
 
 @riverpod
@@ -243,7 +212,7 @@ Future<Details> details(DetailsRef ref, int id) async {
   var didDispose = false;
   ref.onDispose(() => didDispose = true);
 
-  await Future<void>.delayed(const Duration(milliseconds: 250));
+  await Future<void>.delayed(const Duration(milliseconds: 500));
 
   if (didDispose) {
     throw Exception('Cancelled');
@@ -253,6 +222,7 @@ Future<Details> details(DetailsRef ref, int id) async {
   ref.onDispose(client.close);
 
   final response = await client.get(Api.item(id));
+
   final json = jsonDecode(response.body) as Map<String, dynamic>;
 
   ref.keepAlive();

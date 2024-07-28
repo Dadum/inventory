@@ -16,7 +16,14 @@ class ItemWidget extends ConsumerWidget {
     return FutureBuilder(
         future: ref.watch(detailsProvider(item.id).future),
         builder: (context, snapshot) {
-          if (!snapshot.hasData || snapshot.data == null) {
+          if (snapshot.hasError) {
+            return Center(
+                child: Icon(
+              Icons.error,
+              color: Theme.of(context).colorScheme.error,
+            ));
+          }
+          if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
 

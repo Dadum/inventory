@@ -20,20 +20,68 @@ class Search extends _$Search {
 }
 
 @riverpod
-Set<int> filteredIds(FilteredIdsRef ref) {
+Set<int> allIds(AllIdsRef ref) {
+  final characters = ref.watch(charactersProvider);
+  final items = characters.value
+          ?.map((e) => ref.watch(inventoryProvider(character: e)).value ?? [])
+          .expand((element) => element)
+          .toList() ??
+      [];
+  return items.whereType<Item>().map((e) => e.id).toSet();
+}
+
+@riverpod
+Future<Iterable<Item?>> filteredInventory(
+    FilteredInventoryRef ref, String character) async {
   final search = ref.watch(searchProvider);
-  final ids = ref.watch(itemIdsProvider);
+  final items =
+      (await ref.watch(inventoryProvider(character: character).future))
+          .whereType<Item>()
+          .toList();
+
   if (search.isEmpty) {
-    return ids;
+    return items;
   }
 
-  final items = ids.map(
-    (e) => ref.watch(detailsProvider(e)).value,
-  );
+  for (final item in items) {
+    final details = await ref.watch(detailsProvider(item.id).future);
 
-  return items
-      .whereType<Details>()
-      .where((item) => item.name.toLowerCase().contains(search.toLowerCase()))
-      .map((item) => item.id)
-      .toSet();
+    if (!details.name.toLowerCase().contains(search.toLowerCase())) {
+      items.remove(item);
+    }
+  }
+
+  return items;
+}
+
+@riverpod
+bool searching(SearchingRef ref) {
+  return ref.watch(searchProvider).isNotEmpty;
+}
+
+@riverpod
+Future<List<String>> filteredCharacters(FilteredCharactersRef ref) async {
+  final search = ref.watch(searchProvider);
+  final characters = await ref.watch(charactersProvider.future);
+
+  if (search.isEmpty) {
+    return characters;
+  }
+
+  return characters
+      .where((element) =>
+          ref
+              .watch(inventoryProvider(character: element))
+              .value
+              ?.whereType<Item>()
+              .any((item) =>
+                  ref
+                      .watch(detailsProvider(item.id))
+                      .value
+                      ?.name
+                      .toLowerCase()
+                      .contains(search.toLowerCase()) ??
+                  false) ??
+          false)
+      .toList();
 }

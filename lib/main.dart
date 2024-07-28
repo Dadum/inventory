@@ -65,7 +65,7 @@ class Home extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
-              ref.invalidate(itemsProvider);
+              ref.invalidate(inventoryProvider);
               ref.invalidate(charactersProvider);
             },
           ),

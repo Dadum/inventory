@@ -3,6 +3,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:inventory/constants.dart';
 import 'package:inventory/providers/api.dart';
+import 'package:inventory/providers/search.dart';
+import 'package:inventory/providers/settings.dart';
 import 'package:inventory/widgets/character_inventory.dart';
 
 class CharactersView extends ConsumerWidget {
@@ -10,30 +12,65 @@ class CharactersView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final characters = ref.watch(filteredCharactersProvider);
+    final characters = ref.watch(charactersProvider);
+    if (ref.watch(searchingProvider)) {
+      characters.value?.removeWhere(
+        (element) =>
+            !(ref.watch(filteredCharactersProvider).value?.contains(element) ??
+                true),
+      );
+    }
+
+    final listItems = [
+      if (ref.watch(settingsProvider.select((v) => v.showCharacters)))
+        ...(characters.value?.map(
+                (e) => (key: e, child: CharacterInventory(character: e))) ??
+            []),
+      if (ref.watch(settingsProvider.select((v) => v.showBank)))
+        (key: 'bank', child: const BankInventory()),
+      if (ref.watch(settingsProvider.select((v) => v.showMaterials)))
+        (key: 'materials', child: const MaterialInventory()),
+    ];
+
     return ListView.separated(
-      itemCount: characters.length,
+      itemCount: listItems.length,
       itemBuilder: (context, index) {
-        return Column(
-          key: ValueKey(characters[index]),
-          children: [
-            ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxWidth: LayoutConstants.contentMaxWidth,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: LayoutConstants.largePadding,
-                ),
-                child: CharacterInventory(character: characters[index]),
-              ),
-            ).animate().fadeIn(duration: 500.ms),
-          ],
+        return _ListEntry(
+          key: ValueKey(listItems[index].key),
+          child: listItems[index].child,
         );
       },
       separatorBuilder: (context, index) => const SizedBox.square(
         dimension: LayoutConstants.largePadding,
       ),
+    );
+  }
+}
+
+class _ListEntry extends StatelessWidget {
+  const _ListEntry({
+    super.key,
+    required this.child,
+  });
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: LayoutConstants.contentMaxWidth,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: LayoutConstants.largePadding,
+            ),
+            child: child,
+          ).animate().fadeIn(duration: 500.ms),
+        ),
+      ],
     );
   }
 }
